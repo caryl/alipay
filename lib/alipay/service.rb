@@ -94,6 +94,30 @@ module Alipay
       request_uri(params, options).to_s
     end
 
+    CREATE_BATCH_TRANS_NOTIFY_URL_REQUIRED_PARAMS = %w( batch_no account_name email batch_fee data notify_url )
+    def self.batch_trans_notify_url(params, options = {})
+      params = Utils.stringify_keys(params)
+      check_required_params(params, CREATE_BATCH_TRANS_NOTIFY_URL_REQUIRED_PARAMS)
+
+      data = params.delete('data')
+      detail_data = data.map do|item|
+        item = Utils.stringify_keys(item)
+        "#{item['seq_no']}^#{item['account']}^#{item['name']}^#{item['amount']}^#{item['reason']}"
+      end.join('|')
+
+      params = {
+        'service'        => 'batch_trans_notify',
+        '_input_charset' => 'utf-8',
+        'partner'        => options[:pid] || Alipay.pid,
+        'seller_user_id' => options[:pid] || Alipay.pid,
+        'pay_date'    => Time.now.strftime('%Y-%m-%d %H:%M:%S'),
+        'batch_num'      => data.size,
+        'detail_data'    => detail_data
+      }.merge(params)
+
+      request_uri(params, options).to_s
+    end
+
     CREATE_FOREX_SINGLE_REFUND_URL_REQUIRED_PARAMS = %w( out_return_no out_trade_no return_amount currency reason )
     def self.forex_refund_url(params, options = {})
       params = Utils.stringify_keys(params)
